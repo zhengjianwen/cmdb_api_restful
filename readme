@@ -1,0 +1,10 @@
+接口说明
+
+厂商
+/cmdb/api/{orgid}/{PK}
+    GET 获取所有厂商的列表
+    GET 获取
+
+
+联系人
+/cmdb/api/{orgid}
