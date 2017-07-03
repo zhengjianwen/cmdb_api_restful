@@ -133,7 +133,7 @@ class Tags(models.Model):
 
 class Asset(models.Model):
     """
-    资产信息表，所有资产信息（服务器，网络设备）
+    资产信息表，所有资产信息(服务器，网络设备)
     """
     type_choices = Choices('SERVER', 'NETWORK')
     status_choices = Choices('RUNNING', 'MAINTANCING', 'STOCK')
@@ -174,7 +174,6 @@ class Server(models.Model):
     int_ip = models.GenericIPAddressField(u'内网IP', max_length=64, blank=True, null=True)
     ext_ip = models.GenericIPAddressField(u'外网IP', max_length=64, blank=True, null=True)
     note = models.CharField(u'备注', max_length=128, null=True, blank=True)
-    create_at = models.DateField(u'创建时间', blank=True)
 
     class Meta:
         verbose_name_plural = u"服务器表"
@@ -190,10 +189,12 @@ class NetworkDevice(models.Model):
     type_choices = Choices('SWITCH', 'FIREWALL', 'ROUTER', 'OTHER')
     asset = models.OneToOneField('Asset')
     device_type = StatusField(u'设备类型', choices_name='type_choices')
-    vlan_ip = models.CharField(u'VlanIP', max_length=64, blank=True, null=True)
-    intranet_ip = models.CharField(u'内网IP', max_length=128, blank=True, null=True)
+    # vlan_ip = models.CharField(u'VlanIP', max_length=64, blank=True, null=True)
+    int_ip = models.CharField(u'内网IP', max_length=128, blank=True, null=True)
+    ext_ip = models.CharField(u'外网IP', max_length=128, blank=True, null=True)
     port_num = models.SmallIntegerField(u'端口个数', null=True, blank=True)
     device_detail = models.CharField(u'设置详细配置', max_length=255, null=True, blank=True)
+    note = models.CharField('备注', max_length=128, null=True)
 
     class Meta:
         verbose_name_plural = u"网络设备"

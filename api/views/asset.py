@@ -187,7 +187,7 @@ class NetworkDeviceViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         orgid = self.kwargs["orgid"]
         queryset = NetworkDevice.objects.filter(asset__orgid=orgid)
-        network_serializer = ServerSerializer(queryset, many=True)
+        network_serializer = NetworkSerializer(queryset, many=True)
 
         return processdata({
             "status": 0,
@@ -215,7 +215,7 @@ class NetworkDeviceViewSet(viewsets.ModelViewSet):
             }, request)
 
     def create(self, request, *args, **kwargs):
-        serializer = ServerSerializer(data=request.data)
+        serializer = NetworkSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             self.perform_create(serializer)
 
@@ -253,11 +253,11 @@ class NetworkDeviceViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         pk = self.kwargs["pk"]
         orgid = self.kwargs["orgid"]
-        queryset = Server.objects.filter(asset__orgid=orgid,id=pk)
+        queryset = NetworkDevice.objects.filter(asset__orgid=orgid,id=pk)
         instance = get_object_or_404(queryset)
         self.perform_destroy(instance)
         return processdata({
             "status": 0,
             "data": "",
-            "msg": "删除服务器成功"
+            "msg": "删除设备成功"
         }, request)

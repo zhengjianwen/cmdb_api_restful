@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding=utf-8 -*-
 from __future__ import unicode_literals
-from django.shortcuts import render,HttpResponse
+from django.shortcuts import render, HttpResponse
 from django.views import View
 from repository.models import *
 from django.db.models import Count
@@ -15,7 +15,7 @@ class AssetUploadViewSet(View):
     
     '''
 
-    def get(self,request, orgid):
+    def get(self, request, orgid):
         '''
         API Provide download file template
         :param request: 
@@ -26,7 +26,6 @@ class AssetUploadViewSet(View):
             "status": 1,
             "data": '',
             "msg": 'Verification does not pass'}
-        # return render(request,'file.html', locals())
         if self.verification(request) or 1:
             msg['status'] = 0
             msg['data'] = '/static/filetamplate/asset_template.xlsx'
@@ -42,7 +41,7 @@ class AssetUploadViewSet(View):
         file_path = self.wirte_excel(request)
         if not file_path:
             msg['status'] = 1
-            msg['msg'] = "The file format is incorrect"
+            msg['msg'] = "这个文件不是有效格式的文件"
             return HttpResponse(json.dumps(msg))
 
         data = self.read_excel(file_path)
@@ -58,7 +57,7 @@ class AssetUploadViewSet(View):
 
     def wirte_excel(self, request):
         '''
-        this is a get excel file and wirte excel
+        写入excel文件
         :param request: 
         :return: file path
         '''
@@ -77,7 +76,7 @@ class AssetUploadViewSet(View):
 
     def read_excel(self, path):
         '''
-        read excel content and return countent
+        读取文件内容并返回数据
         :param path: 
         :return: dict content
         '''
@@ -99,19 +98,24 @@ class AssetUploadViewSet(View):
             if self.data_review(data[i]['data']):
                 tmp['status'] = True
             data[tmp['sn']] = tmp
-        os.remove(path)  # delete file_tmp
+        os.remove(path)  # 删除缓存文件
         if not data:
             return False
 
         return self.data_review(data)
 
     def verification(self, request):
+        '''
+        认证验证
+        :param request: 
+        :return: 
+        '''
         cookie = request.COOKIES.get('rywww')
         if cookie:
             return True
 
     def data_review(self, data):
-        '''data verification'''
+        '''数据验证'''
         from utils.formdb import AssetForm
         obj = AssetForm(data)
         if obj.is_valid():
@@ -123,6 +127,7 @@ class AssetDownViewSet(View):
     '''
     down data to excel
     '''
+
     def get(self, request, orgid):
         msg = {
             "status": 1,
@@ -148,7 +153,6 @@ class AssetDownViewSet(View):
         excel = xlwt.Workbook()
         sheet = excel.add_sheet('database', cell_overwrite_ok=True)
 
-
         # write data
         for x, row in enumerate(data_list):
             for y, val in enumerate(row):
@@ -163,7 +167,7 @@ class AssetDownViewSet(View):
         old_path = os.path.join(BASE_DIR, file_name)
         new_file_path = os.path.join(BASE_DIR, 'static', 'tmp', file_name)
         if os.path.exists(old_path):
-            shutil.move(old_path,new_file_path)
+            shutil.move(old_path, new_file_path)
             return file_name
 
     def getdata(self, request, orgid):
@@ -188,16 +192,16 @@ class AssetDownViewSet(View):
 
 
 class AssetCount(View):
-
-    def get(self,request,orgid):
-        msg = {"status": 1,"data": '',"msg": None}
+    def get(self, request, orgid):
+        msg = {"status": 1, "data": '', "msg": None}
         condition = request.GET.get('condition')
-        data_sum_group_items = Asset.objects.filter(orgid=orgid).values('%s'%condition).annotate(c_sum=Count('%s'%condition))
+        data_sum_group_items = Asset.objects.filter(orgid=orgid).values('%s' % condition).annotate(
+            c_sum=Count('%s' % condition))
 
         data = []
         for item in data_sum_group_items:
             tmp = {}
-            tmp['name'] = item['%s'%condition]
+            tmp['name'] = item['%s' % condition]
             tmp['sum_nub'] = item['c_sum']
             data.append(tmp)
         if not data:
@@ -205,9 +209,3 @@ class AssetCount(View):
             msg['msg'] = 'No data has been found'
         msg['data'] = data
         return HttpResponse(json.dumps(data))
-
-
-
-
-
-
