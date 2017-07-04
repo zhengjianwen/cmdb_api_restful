@@ -6,10 +6,9 @@ from django.forms import fields
 from django.core.validators import RegexValidator
 from django.forms import widgets
 from django.core.exceptions import ValidationError
-from asset.models import *
-from idc.models import *
-from rack.models import *
+from repository import *
 import re
+
 
 
 class AssetForm(Form):
@@ -131,3 +130,11 @@ class AssetForm(Form):
         if ret:
             raise ValidationError('Data is duplicated','invalid')
         return self.cleaned_data
+
+
+class ServerForm(Form):
+    pass
+
+
+class NetworkForm(Form):
+    pass

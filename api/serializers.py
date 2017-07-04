@@ -496,7 +496,6 @@ class AssetSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-
         tags = validated_data.get('tags')
         del validated_data['tags']
         obj = Asset.objects.create(**validated_data)
@@ -506,6 +505,11 @@ class AssetSerializer(serializers.ModelSerializer):
         return obj
 
     def update(self, instance, validated_data):
+        if validated_data.get('tags'):
+            tags = validated_data['tags']
+            del validated_data['tags']
+            tags_objs = Tags.objects.filter(id__in=tags)
+            instance.tags.set(*tags_objs)
         instance.device_status = validated_data.get('device_status', instance.device_status)
         instance.manage_ip = validated_data.get('manage_ip', instance.manage_ip)
         instance.latest_date = validated_data.get('latest_date', instance.latest_date)
@@ -546,8 +550,13 @@ class ServerSerializer(serializers.ModelSerializer):
         return Server.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        # instance.orgid = validated_data.get('orgid', instance.orgid)
-
+        instance.hostname = validated_data.get('hostname', instance.hostname)
+        instance.raid = validated_data.get('raid', instance.raid)
+        instance.os_platform = validated_data.get('os_platform', instance.os_platform)
+        instance.os_version = validated_data.get('os_version', instance.os_version)
+        instance.int_ip = validated_data.get('int_ip', instance.int_ip)
+        instance.ext_ip = validated_data.get('ext_ip', instance.ext_ip)
+        instance.note = validated_data.get('note', instance.note)
         instance.save()
 
         return instance
@@ -564,13 +573,30 @@ class NetworkSerializer(serializers.ModelSerializer):
         """
         if data['asset'].device_type == 'SERVER':
             raise serializers.ValidationError('资产类型不符合。')
+        if data['int_ip']:
+            ret = ipverification(data['int_ip'])
+            if not ret:
+                raise serializers.ValidationError('内网IP地址格式错误')
+        if data['ext_ip']:
+            ret = ipverification(data['ext_ip'])
+            if not ret:
+                raise serializers.ValidationError('外网IP地址格式错误')
+        if data['port_num']:
+            if not str(data['port_num']).isdigit():
+                raise serializers.ValidationError('端口必须是数字')
+
         return data
 
     def create(self, validated_data):
         return NetworkDevice.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        # instance.orgid = validated_data.get('orgid', instance.orgid)
+        instance.device_type = validated_data.get('device_type', instance.device_type)
+        instance.int_ip = validated_data.get('int_ip', instance.int_ip)
+        instance.ext_ip = validated_data.get('ext_ip', instance.ext_ip)
+        instance.port_num = validated_data.get('port_num', instance.port_num)
+        instance.device_detail = validated_data.get('device_detail', instance.device_detail)
+        instance.note = validated_data.get('note', instance.note)
 
         instance.save()
 

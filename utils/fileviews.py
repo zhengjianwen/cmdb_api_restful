@@ -7,7 +7,7 @@ from repository.models import *
 from django.db.models import Count
 from cmdb.settings import BASE_DIR
 import json, os, xlwt, time, shutil, xlrd
-
+from utils.formdb import AssetForm
 
 class AssetUploadViewSet(View):
     '''
@@ -22,10 +22,11 @@ class AssetUploadViewSet(View):
         :param orgid: 
         :return: 
         '''
+        return render(request,'upload/upload.html')
         msg = {
             "status": 1,
             "data": '',
-            "msg": 'Verification does not pass'}
+            "msg": ''}
         if self.verification(request) or 1:
             msg['status'] = 0
             msg['data'] = '/static/filetamplate/asset_template.xlsx'
@@ -33,11 +34,7 @@ class AssetUploadViewSet(View):
         return HttpResponse(json.dumps(msg))
 
     def post(self, request, orgid):
-        msg = {
-            "status": 0,
-            "data": '',
-            "msg": None}
-
+        msg = {"status": 0, "data": '', "msg": None}
         file_path = self.wirte_excel(request)
         if not file_path:
             msg['status'] = 1
@@ -64,7 +61,7 @@ class AssetUploadViewSet(View):
         import os
         from cmdb.settings import BASE_DIR
 
-        file = request.FILES.get('asset_file')
+        file = request.FILES.get('file')
         if '.xls' not in file.name[-5:]:
             return False
 
@@ -81,28 +78,39 @@ class AssetUploadViewSet(View):
         :return: dict content
         '''
         excel = xlrd.open_workbook(path)
-        table = excel.sheets()[0]
+        # 获取表
+        table_server = excel.sheet_by_name(u'server')
+        table_network = excel.sheet_by_name(u'network')
         data = {}
-        nrows = table.nrows
-        title = None
-        for i in range(nrows):
-            row_val = table.row_values(i)
-            if i == 0 and 'sn' in row_val:
-                title = row_val
-                continue
-            tmp = {'statuc': False, 'data': {}}
-
-            for index, key in enumerate(title):
-                tmp['data'][key] = row_val[index]
-
-            if self.data_review(data[i]['data']):
-                tmp['status'] = True
-            data[tmp['sn']] = tmp
+        # 获取行数
+        data.update(self.read_data(table_server))
+        data.update(self.read_data(table_network))
         os.remove(path)  # 删除缓存文件
         if not data:
             return False
 
-        return self.data_review(data)
+        return data
+
+    def read_data(self,table):
+        nrows = table.nrows
+        title = None
+        data = {}
+        for i in range(nrows):
+            # 获取美每数据
+            row_val = table.row_values(i)
+            if i == 0 and 'sn' in row_val:
+                title = row_val  # 讲标题赋值给系统
+                continue
+            tmp = {'status': False, 'data': {}}
+            # 将值变成键值对的方式保存
+            for index, key in enumerate(title):
+                tmp['data'][key] = row_val[index]
+
+            if self.data_review(tmp['data']):
+                tmp['status'] = True
+            data[tmp['data']['sn']] = tmp
+        print('-->',data)
+        return data
 
     def verification(self, request):
         '''
@@ -116,10 +124,9 @@ class AssetUploadViewSet(View):
 
     def data_review(self, data):
         '''数据验证'''
-        from utils.formdb import AssetForm
-        obj = AssetForm(data)
-        if obj.is_valid():
-            return True
+        # obj = AssetForm(data)
+        # if obj.is_valid():
+        #     return True
         return False
 
 

@@ -27,10 +27,8 @@ router.register(r'network/(?P<orgid>\d+)', asset.NetworkDeviceViewSet)
 
 # 自定义url接口
 urlpatterns = [
-    # url(r'^asset/(?P<orgid>\d+)/', asset.AssetView.as_view()),
     url(r'^upload/(?P<orgid>\d+)/', fileviews.AssetUploadViewSet.as_view()),
     url(r'^down/(?P<orgid>\d+)/', fileviews.AssetDownViewSet.as_view()),
-    # url(r'^statistic$/(?P<orgid>\d+)/', fileviews.AssetCount.as_view()),
     url(r'^', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     #url(r'^api-token-auth/', authtoken_views.obtain_auth_token)
